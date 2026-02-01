@@ -1,19 +1,21 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Provider } from 'react-redux'
 import { makeStore } from '@/lib/store'
-import { initializeAuth } from '@/lib/features/auth/authSlice'
+import { PersistGate } from 'redux-persist/integration/react'
 
 export default function StoreProvider({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [store] = useState(() => makeStore())
+  const [{ store, persistor }] = useState(() => makeStore())
 
-  useEffect(() => {
-    store.dispatch(initializeAuth())
-  }, [store])
-
-  return <Provider store={store}>{children}</Provider>
+  return (
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        {children}
+      </PersistGate>
+    </Provider>
+  )
 }

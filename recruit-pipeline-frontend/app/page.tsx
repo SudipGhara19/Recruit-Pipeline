@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux'
 import { RootState } from '@/lib/store'
 import Sidebar from '@/components/Sidebar'
 import { useSearchParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { LuLayoutDashboard } from "react-icons/lu"
 import { useEffect } from 'react'
 
@@ -27,7 +26,7 @@ export default function Home() {
   const searchParams = useSearchParams()
   const activeTab = searchParams.get("tab") || "dashboard"
 
-  const router = useRouter() // Import useRouter if not already imported, wait need to check imports
+  const router = useRouter()
 
   useEffect(() => {
     if (!isAuthenticated) {

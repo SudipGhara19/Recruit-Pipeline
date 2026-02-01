@@ -1,23 +1,176 @@
-import React from 'react'
+import React, { useEffect, useMemo } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { RootState, AppDispatch } from '@/lib/store'
+import { fetchJobs } from '@/lib/features/jobs/jobSlice'
+import { fetchUsers } from '@/lib/features/users/userSlice'
+import { motion, Variants } from 'framer-motion'
+import { FaBriefcase, FaUsers, FaClipboardList, FaArrowRight } from 'react-icons/fa'
+import { BeatLoader } from 'react-spinners'
 
 export default function RecruiterDashboard() {
-  return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
-       <h2 className="text-2xl font-bold mb-4 text-violet-700">Recruiter Dashboard</h2>
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-blue-50 rounded shadow border-l-4 border-blue-500">
-             <h3 className="text-lg font-semibold text-blue-700">Active Jobs</h3>
-             <p className="text-3xl font-bold">12</p>
-          </div>
-           <div className="p-4 bg-green-50 rounded shadow border-l-4 border-green-500">
-             <h3 className="text-lg font-semibold text-green-700">New Candidates</h3>
-             <p className="text-3xl font-bold">45</p>
-          </div>
-           <div className="p-4 bg-purple-50 rounded shadow border-l-4 border-purple-500">
-             <h3 className="text-lg font-semibold text-purple-700">Interviews</h3>
-             <p className="text-3xl font-bold">8</p>
-          </div>
-       </div>
-    </div>
-  )
+    const dispatch = useDispatch<AppDispatch>()
+    const { jobs, loading: jobsLoading } = useSelector((state: RootState) => state.jobs)
+    const { users, loading: usersLoading } = useSelector((state: RootState) => state.users)
+
+    useEffect(() => {
+        dispatch(fetchJobs())
+        dispatch(fetchUsers())
+    }, [dispatch])
+
+    const stats = useMemo(() => {
+        const activeJobs = jobs.length
+        const totalCandidates = users.filter(u => u.role === 'Candidate').length
+        const recentJobs = jobs.slice(0, 5)
+        const candidates = users.filter(u => u.role === 'Candidate').slice(0, 5)
+        
+        return {
+            activeJobs,
+            totalCandidates,
+            recentJobs,
+            candidates
+        }
+    }, [jobs, users])
+
+    if (jobsLoading || usersLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <BeatLoader color="#6D28D9" />
+            </div>
+        )
+    }
+
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    }
+
+    const itemVariants: Variants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { 
+                type: 'spring' as const, 
+                stiffness: 100,
+                damping: 20
+            }
+        }
+    }
+
+    return (
+        <motion.div 
+            className="p-4 md:p-8 space-y-8"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+        >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Recruiter Dashboard</h1>
+                    <p className="text-gray-500 font-medium">Overview of your recruitment pipeline</p>
+                </div>
+            </div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                    { label: 'Active Jobs', value: stats.activeJobs, icon: FaBriefcase, color: 'bg-blue-500' },
+                    { label: 'Total Candidates', value: stats.totalCandidates, icon: FaUsers, color: 'bg-green-500' },
+                    { label: 'Job Applications', value: '45', icon: FaClipboardList, color: 'bg-violet-500' },
+                ].map((stat, idx) => (
+                    <motion.div 
+                        key={idx}
+                        variants={itemVariants}
+                        whileHover={{ y: -5 }}
+                        className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-6"
+                    >
+                        <div className={`${stat.color} p-4 rounded-2xl text-white shadow-lg shadow-${stat.color.split('-')[1]}-100`}>
+                            <stat.icon className="text-2xl" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
+                            <h3 className="text-3xl font-black text-gray-800">{stat.value}</h3>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Candidates List */}
+                <motion.div variants={itemVariants} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                    <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-gray-800">Recent Candidates</h2>
+                        <button className="text-violet-600 hover:text-violet-700 text-sm font-bold flex items-center gap-1 transition-all group">
+                            View All <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
+                        </button>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                        {stats.candidates.length > 0 ? (
+                            stats.candidates.map((candidate) => (
+                                <div key={candidate._id} className="p-4 hover:bg-violet-50/30 transition-colors flex items-center justify-between group">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-lg shadow-inner">
+                                            {candidate.fullName.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-800">{candidate.fullName}</h4>
+                                            <p className="text-xs text-gray-500 font-medium">{candidate.email}</p>
+                                        </div>
+                                    </div>
+                                    <span className="bg-green-100 text-green-700 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest hidden sm:block">Active</span>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="p-12 text-center">
+                                <FaUsers className="text-4xl text-gray-200 mx-auto mb-3" />
+                                <p className="text-gray-400 font-medium">No candidates registered yet.</p>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+
+                {/* Recent Jobs */}
+                <motion.div variants={itemVariants} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                    <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-gray-800">Latest Postings</h2>
+                        <button className="text-violet-600 hover:text-violet-700 text-sm font-bold flex items-center gap-1 transition-all group">
+                            View All <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
+                        </button>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                        {stats.recentJobs.length > 0 ? (
+                            stats.recentJobs.map((job) => (
+                                <div key={job._id} className="p-4 hover:bg-violet-50/30 transition-colors flex items-center justify-between group">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-violet-100 group-hover:text-violet-600 font-bold text-lg transition-all shadow-inner border border-gray-100 group-hover:border-violet-200">
+                                            <FaBriefcase className="text-xl" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-800">{job.postName}</h4>
+                                            <p className="text-xs text-gray-500 font-medium">{job.salary}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right hidden sm:block">
+                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Post Date</p>
+                                        <p className="text-xs text-gray-600 font-bold">{new Date(job.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="p-12 text-center">
+                                <FaBriefcase className="text-4xl text-gray-200 mx-auto mb-3" />
+                                <p className="text-gray-400 font-medium">No jobs posted yet.</p>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            </div>
+        </motion.div>
+    )
 }
+

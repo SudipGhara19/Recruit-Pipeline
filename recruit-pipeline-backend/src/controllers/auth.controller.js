@@ -4,8 +4,8 @@ const Candidate = require('../models/candidate.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (id, email, role) => {
+  return jwt.sign({ id, email, role }, process.env.JWT_SECRET, {
     expiresIn: '30d',
   });
 };
@@ -47,7 +47,7 @@ const signup = async (req, res, next) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id),
+        token: generateToken(user._id, user.email, user.role),
       });
     } else {
       res.status(400);
@@ -83,7 +83,7 @@ const login = async (req, res, next) => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id),
+        token: generateToken(user._id, user.email, user.role),
       });
     } else {
       res.status(401);
