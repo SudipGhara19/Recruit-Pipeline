@@ -7,11 +7,16 @@ const userDataSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  // Add other specific fields here as needed
+  fullName: { type: String },
+  email: { type: String },
   phone: { type: String },
   address: { type: String },
   resume: { type: String }, // URL to resume
-  skills: [{ type: String }]
+  resumePublicId: { type: String }, // Cloudinary Public ID
+  skills: [{ type: String }],
+  experience: { type: String },
+  jobRole: { type: mongoose.Schema.Types.ObjectId, ref: 'Job' },
+  stage: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('UserData', userDataSchema);

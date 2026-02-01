@@ -2,23 +2,31 @@ import React, { useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '@/lib/store'
 import { fetchUsers } from '@/lib/features/users/userSlice'
+import { fetchCandidates } from '@/lib/features/candidates/candidateSlice'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
 import { FaUserTie, FaEnvelope, FaCheckCircle, FaUsers } from 'react-icons/fa'
 import { BeatLoader } from 'react-spinners'
 
 export default function HRs() {
     const dispatch = useDispatch<AppDispatch>()
-    const { users, loading, error } = useSelector((state: RootState) => state.users)
+    const { users, loading: usersLoading, error: usersError } = useSelector((state: RootState) => state.users)
+    const { candidates, loading: candidatesLoading, error: candidatesError } = useSelector((state: RootState) => state.candidates)
 
     useEffect(() => {
         dispatch(fetchUsers())
+        dispatch(fetchCandidates())
     }, [dispatch])
 
     const hrTeam = useMemo(() => {
-        return users.filter(user => user.role === 'HR')
-    }, [users])
+        return users.filter(user => user.role === 'HR').map(hr => {
+            const processedCount = candidates.filter(c => 
+                (typeof c.addedBy === 'string' ? c.addedBy === hr._id : c.addedBy?._id === hr._id)
+            ).length
+            return { ...hr, processedCount }
+        })
+    }, [users, candidates])
 
-    if (loading && users.length === 0) {
+    if ((usersLoading || candidatesLoading) && users.length === 0) {
         return (
             <div className="flex justify-center items-center h-64">
                 <BeatLoader color="#6D28D9" />
@@ -62,9 +70,9 @@ export default function HRs() {
                 </div>
             </div>
 
-            {error && (
+            {(usersError || candidatesError) && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl shadow-sm">
-                    <p className="text-red-700 font-medium">{error}</p>
+                    <p className="text-red-700 font-medium">{usersError || candidatesError}</p>
                 </div>
             )}
 
@@ -115,13 +123,16 @@ export default function HRs() {
                                         <div className="space-y-1">
                                             <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Candidates Processed</p>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-2xl font-black text-gray-800">24</span>
+                                                <span className="text-2xl font-black text-gray-800">{hr.processedCount}</span>
                                                 <FaCheckCircle className="text-green-500" />
                                             </div>
                                         </div>
-                                        <button className="bg-gray-50 hover:bg-violet-600 text-gray-400 hover:text-white p-3 rounded-xl transition-all shadow-inner hover:shadow-lg active:scale-95 group/btn">
+                                        <a 
+                                            href={`mailto:${hr.email}`}
+                                            className="bg-gray-50 hover:bg-violet-600 text-gray-400 hover:text-white p-3 rounded-xl transition-all shadow-inner hover:shadow-lg active:scale-95 group/btn flex items-center justify-center"
+                                        >
                                             <FaEnvelope className="group-hover/btn:animate-bounce" />
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
                             </motion.div>

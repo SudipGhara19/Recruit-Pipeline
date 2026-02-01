@@ -2,36 +2,40 @@ import React, { useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '@/lib/store'
 import { fetchJobs } from '@/lib/features/jobs/jobSlice'
-import { fetchUsers } from '@/lib/features/users/userSlice'
+import { fetchCandidates } from '@/lib/features/candidates/candidateSlice'
 import { motion, Variants } from 'framer-motion'
 import { FaBriefcase, FaUsers, FaClipboardList, FaArrowRight } from 'react-icons/fa'
 import { BeatLoader } from 'react-spinners'
+import { useRouter } from 'next/navigation'
 
 export default function RecruiterDashboard() {
     const dispatch = useDispatch<AppDispatch>()
+    const router = useRouter()
     const { jobs, loading: jobsLoading } = useSelector((state: RootState) => state.jobs)
-    const { users, loading: usersLoading } = useSelector((state: RootState) => state.users)
+    const { candidates, loading: candidatesLoading } = useSelector((state: RootState) => state.candidates)
 
     useEffect(() => {
         dispatch(fetchJobs())
-        dispatch(fetchUsers())
+        dispatch(fetchCandidates())
     }, [dispatch])
 
     const stats = useMemo(() => {
         const activeJobs = jobs.length
-        const totalCandidates = users.filter(u => u.role === 'Candidate').length
-        const recentJobs = jobs.slice(0, 5)
-        const candidates = users.filter(u => u.role === 'Candidate').slice(0, 5)
+        const totalCandidates = candidates.length
+        const totalApplications = candidates.length // Basic proxy: each candidate record is an application
+        const recentJobs = [...jobs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5)
+        const recentCandidates = [...candidates].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5)
         
         return {
             activeJobs,
             totalCandidates,
+            totalApplications,
             recentJobs,
-            candidates
+            recentCandidates
         }
-    }, [jobs, users])
+    }, [jobs, candidates])
 
-    if (jobsLoading || usersLoading) {
+    if (jobsLoading || candidatesLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <BeatLoader color="#6D28D9" />
@@ -80,8 +84,8 @@ export default function RecruiterDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                     { label: 'Active Jobs', value: stats.activeJobs, icon: FaBriefcase, color: 'bg-blue-500' },
-                    { label: 'Total Candidates', value: stats.totalCandidates, icon: FaUsers, color: 'bg-green-500' },
-                    { label: 'Job Applications', value: '45', icon: FaClipboardList, color: 'bg-violet-500' },
+                    { label: 'Candidates', value: stats.totalCandidates, icon: FaUsers, color: 'bg-green-500' },
+                    { label: 'Total Placements', value: stats.totalApplications, icon: FaClipboardList, color: 'bg-violet-500' },
                 ].map((stat, idx) => (
                     <motion.div 
                         key={idx}
@@ -105,13 +109,16 @@ export default function RecruiterDashboard() {
                 <motion.div variants={itemVariants} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
                     <div className="p-6 border-b border-gray-50 flex justify-between items-center">
                         <h2 className="text-xl font-bold text-gray-800">Recent Candidates</h2>
-                        <button className="text-violet-600 hover:text-violet-700 text-sm font-bold flex items-center gap-1 transition-all group">
+                        <button 
+                            onClick={() => router.push('?tab=candidates')}
+                            className="text-violet-600 hover:text-violet-700 text-sm font-bold flex items-center gap-1 transition-all group"
+                        >
                             View All <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
                         </button>
                     </div>
                     <div className="divide-y divide-gray-50">
-                        {stats.candidates.length > 0 ? (
-                            stats.candidates.map((candidate) => (
+                        {stats.recentCandidates.length > 0 ? (
+                            stats.recentCandidates.map((candidate) => (
                                 <div key={candidate._id} className="p-4 hover:bg-violet-50/30 transition-colors flex items-center justify-between group">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-lg shadow-inner">
@@ -138,7 +145,10 @@ export default function RecruiterDashboard() {
                 <motion.div variants={itemVariants} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
                     <div className="p-6 border-b border-gray-50 flex justify-between items-center">
                         <h2 className="text-xl font-bold text-gray-800">Latest Postings</h2>
-                        <button className="text-violet-600 hover:text-violet-700 text-sm font-bold flex items-center gap-1 transition-all group">
+                        <button 
+                            onClick={() => router.push('?tab=jobs')}
+                            className="text-violet-600 hover:text-violet-700 text-sm font-bold flex items-center gap-1 transition-all group"
+                        >
                             View All <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
                         </button>
                     </div>

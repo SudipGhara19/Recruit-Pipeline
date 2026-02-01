@@ -15,6 +15,7 @@ export default function Jobs() {
     // Modal State
     const [selectedJob, setSelectedJob] = useState<Job | null>(null)
     const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
         dispatch(fetchJobs())
@@ -28,6 +29,12 @@ export default function Jobs() {
             return dateB - dateA
         })
     }, [jobs])
+
+    const filteredJobs = useMemo(() => {
+        return sortedJobs.filter(job => 
+            job.postName.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+    }, [sortedJobs, searchQuery])
 
     const handleViewDetails = (job: Job) => {
         setSelectedJob(job)
@@ -86,7 +93,9 @@ export default function Jobs() {
                     <input 
                         type="text" 
                         placeholder="Search positions..." 
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:bg-white transition-all"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white border-2 border-gray-100 rounded-2xl text-sm text-gray-800 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-300 transition-all font-medium shadow-sm"
                     />
                 </div>
             </div>
@@ -103,14 +112,16 @@ export default function Jobs() {
                 initial="hidden"
                 animate="visible"
             >
-                {sortedJobs.length === 0 ? (
+                {filteredJobs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 bg-white rounded-3xl border-2 border-dashed border-gray-200">
                         <FaBriefcase className="text-4xl text-gray-300 mb-2" />
-                        <p className="text-gray-500 font-medium">No job postings available for review.</p>
+                        <p className="text-gray-500 font-medium">
+                            {searchQuery ? `No jobs matching "${searchQuery}"` : "No job postings available for review."}
+                        </p>
                     </div>
                 ) : (
-                    <AnimatePresence>
-                        {sortedJobs.map((job) => (
+                    <AnimatePresence mode="popLayout">
+                        {filteredJobs.map((job) => (
                             <motion.div 
                                 key={job._id}
                                 variants={cardVariants}

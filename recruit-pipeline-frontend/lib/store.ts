@@ -4,11 +4,13 @@ import storage from 'redux-persist/lib/storage'
 import authReducer from './features/auth/authSlice'
 import jobReducer from './features/jobs/jobSlice'
 import userReducer from './features/users/userSlice'
+import candidateReducer from './features/candidates/candidateSlice'
 
 const rootReducer = combineReducers({
   auth: authReducer,
   jobs: jobReducer,
   users: userReducer,
+  candidates: candidateReducer,
 })
 
 const persistConfig = {

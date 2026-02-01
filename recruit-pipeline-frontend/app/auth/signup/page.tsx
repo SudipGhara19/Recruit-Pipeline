@@ -129,7 +129,6 @@ export default function SignupPage() {
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                 >
-                    <option value="Candidate">Candidate</option>
                     <option value="Recruiter">Recruiter</option>
                     <option value="HR">HR</option>
                 </select>

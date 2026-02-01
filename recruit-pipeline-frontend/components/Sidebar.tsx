@@ -4,12 +4,14 @@ import React, { useState } from 'react'
 import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai"
 import { LuLayoutDashboard } from "react-icons/lu"
 import { MdLogout, MdWavingHand } from "react-icons/md"
-import { FaBriefcase, FaUsers, FaUserTie, FaUserCheck, FaUserGroup } from "react-icons/fa6"
+import { FaBriefcase, FaUsers, FaUserTie, FaUserCheck, FaUserGroup, FaLinkedin, FaGithub, FaGlobe } from "react-icons/fa6"
 import { useDispatch, useSelector } from 'react-redux'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { logout } from '@/lib/features/auth/authSlice'
 import { RootState } from '@/lib/store'
+import logoIMG from "@/public/images/logo.png"
+import Image from 'next/image'
 
 // Define Link Item Interface
 interface SidebarItem {
@@ -60,7 +62,9 @@ function Sidebar() {
             {/* Sidebar for Desktop */}
             <div className="hidden md:flex flex-col justify-between w-full h-full bg-gray-800 text-white p-5">
                 <div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Recruit Pipeline</h1>
+                    <div className="flex justify-start mb-6">
+                        <Image src={logoIMG} alt="Logo" width={200} height={100} className="object-contain" />
+                    </div>
                     
                     {user && (
                         <div className='flex items-center gap-1 text-gray-400 text-xs pt-3'>
@@ -91,29 +95,45 @@ function Sidebar() {
 
                 </div>
 
-                <div className='flex flex-col items-center'>
-                    <button onClick={handleSignout} className="w-full bg-transparent border-2 border-violet-700 text-white px-4 py-2 rounded-md flex justify-center items-center gap-2 hover:bg-violet-700 transition-colors">
+                <div className='flex flex-col items-center border-t border-gray-700/50 pt-6'>
+                    <button onClick={handleSignout} className="w-full bg-transparent border-2 border-violet-700 text-white px-4 py-2 rounded-xl flex justify-center items-center gap-2 hover:bg-violet-700 transition-all active:scale-95 mb-6">
                         <MdLogout />
-                        <span>Log Out</span>
+                        <span className="font-bold uppercase tracking-widest text-xs">Log Out</span>
                     </button>
-                    <p className='text-xs text-gray-600 pt-10 text-center'>
-                        An application by: <span className='text-sm text-gray-500 font-semibold'>Sudip Ghara</span>
-                    </p>
-                     <p className='text-xs text-gray-400 text-center'>
-                        Portfolio:
-                        <a href='https://sudipghara19.github.io/Portfolio/'
-                            className='text-sm text-blue-500 font-semibold ml-1'
-                            target="_blank"
-                            rel="noopener noreferrer">
-                            Link
-                        </a>
-                    </p>
+                    
+                    <div className="space-y-3">
+                        <p className='text-[10px] text-gray-500 uppercase tracking-[0.2em] text-center font-black'>
+                            Developed By
+                        </p>
+                        <h4 className="text-sm font-bold text-gray-300 text-center tracking-tight">Sudip Ghara</h4>
+                        
+                        <div className="flex items-center justify-center gap-4 pt-2">
+                            <a href='https://sudipghara19.github.io/Portfolio/' 
+                               target="_blank" rel="noopener noreferrer"
+                               className="text-gray-500 hover:text-violet-400 transition-colors"
+                               title="Portfolio">
+                                <FaGlobe className="text-lg" />
+                            </a>
+                            <a href='https://www.linkedin.com/in/sudip-ghara-b24865214/' 
+                               target="_blank" rel="noopener noreferrer"
+                               className="text-gray-500 hover:text-blue-400 transition-colors"
+                               title="LinkedIn">
+                                <FaLinkedin className="text-lg" />
+                            </a>
+                            <a href='https://github.com/SudipGhara19' 
+                               target="_blank" rel="noopener noreferrer"
+                               className="text-gray-500 hover:text-white transition-colors"
+                               title="GitHub">
+                                <FaGithub className="text-lg" />
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* Mobile Navbar */}
-             <div className="md:hidden fixed top-0 left-0 w-full bg-gray-800 text-white p-4 flex justify-between items-center z-50 shadow-md">
-                <h1 className="text-xl font-bold">Recruit Pipeline</h1>
+             <div className="md:hidden fixed top-0 left-0 w-full bg-gray-800 text-white p-3 flex justify-between items-center z-[60] shadow-md">
+                <Image src={logoIMG} alt="Logo" width={80} height={48} className="object-contain" />
                 <button onClick={() => setIsOpen(!isOpen)} className="text-white text-2xl focus:outline-none">
                     {isOpen ? <AiOutlineClose /> : <AiOutlineMenu />}
                 </button>
@@ -162,19 +182,29 @@ function Sidebar() {
                 </div>
 
                 {/* Footer */}
-                <div className="absolute bottom-10 w-full text-center left-0">
-                     <p className='text-xs text-gray-600'>
-                        An application by: <span className='text-sm text-gray-500 font-semibold'>Sudip Ghara</span>
+                <div className="absolute bottom-10 w-full px-5 left-0 border-t border-gray-700/50 pt-6">
+                     <p className='text-[10px] text-gray-500 uppercase tracking-[0.2em] text-center font-black mb-2'>
+                        Developed By
                     </p>
-                    <p className='text-xs text-gray-400'>
-                        Portfolio:
-                        <a href='https://sudipghara19.github.io/Portfolio/'
-                            className='text-sm text-blue-500 font-semibold ml-1'
-                            target="_blank"
-                            rel="noopener noreferrer">
-                            Link
+                    <h4 className="text-sm font-bold text-gray-300 text-center mb-4">Sudip Ghara</h4>
+                    
+                    <div className="flex items-center justify-center gap-6">
+                        <a href='https://sudipghara19.github.io/Portfolio/' 
+                           target="_blank" rel="noopener noreferrer"
+                           className="text-gray-500 hover:text-violet-400 transition-colors">
+                            <FaGlobe className="text-xl" />
                         </a>
-                    </p>
+                        <a href='https://www.linkedin.com/in/sudip-ghara-b24865214/' 
+                           target="_blank" rel="noopener noreferrer"
+                           className="text-gray-500 hover:text-blue-400 transition-colors">
+                            <FaLinkedin className="text-xl" />
+                        </a>
+                        <a href='https://github.com/SudipGhara19' 
+                           target="_blank" rel="noopener noreferrer"
+                           className="text-gray-500 hover:text-white transition-colors">
+                            <FaGithub className="text-xl" />
+                        </a>
+                    </div>
                 </div>
             </div>
 

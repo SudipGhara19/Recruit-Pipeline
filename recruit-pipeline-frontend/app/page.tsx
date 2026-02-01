@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux'
 import { RootState } from '@/lib/store'
 import Sidebar from '@/components/Sidebar'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { LuLayoutDashboard } from "react-icons/lu"
 import { useEffect } from 'react'
 
 
@@ -70,13 +69,6 @@ export default function Home() {
       }
   }
 
-  // Helper to get tab title and icon (Optional, for header)
-  const getHeaderInfo = () => {
-       // Simple fallback for now, ideally specific headers per component
-       return { title: activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace('-', ' '), icon: <LuLayoutDashboard className="inline-block mr-2 text-violet-600" /> }
-  }
-  
-  const { title, icon } = getHeaderInfo()
 
   return (
     <div className='w-screen h-screen flex bg-gray-100'>
@@ -93,13 +85,8 @@ export default function Home() {
 
 
         {/* Main Content - Scrollable */}
-        <div className='w-full md:w-[80%] ml-auto h-screen overflow-y-auto p-2 md:p-5 pt-20 md:pt-5'>
-             <h1 className="fixed bg-white z-10 w-full md:w-[80%] text-center top-0 left-0 md:left-auto pt-20 md:pt-3 text-2xl font-bold flex items-center justify-center pb-3 border-b border-gray-300 shadow-sm md:shadow-none font-mono">
-                {icon}
-                {title}
-            </h1>
-            
-            <div className="mt-32 md:mt-20">
+        <div className='w-full md:w-[80%] ml-auto h-screen overflow-y-auto p-2 md:p-5'>
+            <div className="mt-16 md:mt-2">
                 {renderContent()}
             </div>
         </div>

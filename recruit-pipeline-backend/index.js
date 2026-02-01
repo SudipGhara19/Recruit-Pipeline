@@ -16,6 +16,9 @@ app.use(express.json());
 app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/jobs', require('./src/routes/job.routes'));
 app.use('/api/users', require('./src/routes/user.routes'));
+app.use('/api/candidates', require('./src/routes/candidate.routes'));
+app.use('/api/ai', require('./src/routes/ai.routes'));
+
 
 // Error Middleware
 app.use(require('./src/middlewares/error.middleware'));

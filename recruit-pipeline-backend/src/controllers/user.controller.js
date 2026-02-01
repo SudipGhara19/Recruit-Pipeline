@@ -1,4 +1,5 @@
 const User = require('../models/user.model');
+const UserData = require('../models/userData.model');
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -30,7 +31,27 @@ const getUserById = async (req, res, next) => {
   }
 };
 
+// @desc    Get current user profile (with UserData)
+// @route   GET /api/users/profile
+// @access  Private
+const getUserProfile = async (req, res, next) => {
+  try {
+    const userData = await UserData.findOne({ userId: req.user.id })
+      .populate('jobRole', 'postName companyName description'); // Assuming companyName might be added or postName is enough
+
+    if (!userData) {
+      res.status(404);
+      throw new Error('User profile data not found');
+    }
+
+    res.json(userData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getUserById,
+  getUserProfile
 };

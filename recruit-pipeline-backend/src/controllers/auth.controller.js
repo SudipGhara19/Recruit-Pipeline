@@ -37,9 +37,29 @@ const signup = async (req, res, next) => {
     });
 
     if (user) {
-      // Create associated UserData
+      // Data synchronization for Candidates
+      let candidateData = {};
+      if (role === 'Candidate') {
+        const candidateEntry = await Candidate.findOne({ email });
+        // Although login is restricted, we double check here to be safe and gather data
+        if (candidateEntry) {
+            candidateData = {
+                fullName: candidateEntry.fullName,
+                email: candidateEntry.email,
+                phone: candidateEntry.phone,
+                skills: candidateEntry.skills,
+                experience: candidateEntry.yearsOfExperience,
+                jobRole: candidateEntry.jobRole,
+                stage: candidateEntry.stage,
+                resume: candidateEntry.resume
+            };
+        }
+      }
+
+      // Create associated UserData with synced or empty info
       await UserData.create({
         userId: user._id,
+        ...candidateData
       });
 
       res.status(201).json({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '@/lib/store'
-import { FaPlus, FaBriefcase, FaMoneyBillWave, FaCode, FaCalendarAlt } from 'react-icons/fa'
+import { FaPlus, FaBriefcase, FaMoneyBillWave, FaCode, FaCalendarAlt, FaSearch } from 'react-icons/fa'
 import { BeatLoader } from 'react-spinners'
 import AddJobModal from './AddJobModal'
 import EditJobModal from './EditJobModal'
@@ -15,6 +15,7 @@ export default function Jobs() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+    const [searchQuery, setSearchQuery] = useState('')
     const dispatch = useDispatch<AppDispatch>()
 
     useEffect(() => {
@@ -30,6 +31,12 @@ export default function Jobs() {
             return dateB - dateA
         })
     }, [jobs])
+
+    const filteredJobs = useMemo(() => {
+        return sortedJobs.filter(job => 
+            job.postName.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+    }, [sortedJobs, searchQuery])
 
     if (loading && jobs.length === 0) {
         return (
@@ -73,18 +80,33 @@ export default function Jobs() {
 
     return (
         <div className="p-4 md:p-6 space-y-6">
-            <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Available Jobs</h2>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div className="space-y-1">
+                    <h2 className="text-2xl font-bold text-gray-800">Job Inventory</h2>
                     <p className="text-gray-500 text-sm">Manage and track your job postings</p>
                 </div>
-                <button 
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-95"
-                >
-                    <FaPlus className="text-sm" />
-                    <span className="font-semibold">Add Job</span>
-                </button>
+                
+                <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                    {/* Search Bar */}
+                    <div className="relative w-full md:w-64 group">
+                        <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-violet-500 transition-colors" />
+                        <input 
+                            type="text" 
+                            placeholder="Search by position..." 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3 bg-gray-50/50 border-2 border-gray-100 rounded-2xl text-sm text-gray-800 focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-300 transition-all font-medium shadow-sm"
+                        />
+                    </div>
+
+                    <button 
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-2xl transition-all shadow-md hover:shadow-lg active:scale-95 w-full md:w-auto mt-2 md:mt-0"
+                    >
+                        <FaPlus className="text-sm" />
+                        <span className="font-bold uppercase tracking-widest text-xs">Add Job</span>
+                    </button>
+                </div>
             </div>
 
             <AddJobModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
@@ -113,14 +135,16 @@ export default function Jobs() {
                 initial="hidden"
                 animate="visible"
             >
-                {!sortedJobs || sortedJobs.length === 0 ? (
-                    <div className="col-span-full flex flex-col items-center justify-center h-64 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                {filteredJobs.length === 0 ? (
+                    <div className="col-span-full flex flex-col items-center justify-center h-64 bg-white rounded-3xl border-2 border-dashed border-gray-200">
                         <FaBriefcase className="text-4xl text-gray-300 mb-2" />
-                        <p className="text-gray-500">No jobs posted yet.</p>
+                        <p className="text-gray-500 font-medium">
+                            {searchQuery ? `No jobs matching "${searchQuery}"` : "No job postings available."}
+                        </p>
                     </div>
                 ) : (
-                    <AnimatePresence>
-                        {sortedJobs.map((job) => job && (
+                    <AnimatePresence mode="popLayout">
+                        {filteredJobs.map((job) => job && (
                             <motion.div 
                                 key={job._id}
                                 variants={cardVariants}
