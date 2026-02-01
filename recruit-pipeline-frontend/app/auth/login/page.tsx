@@ -8,17 +8,23 @@ import api from '@/lib/axios'
 import Link from 'next/link'
 import Image from "next/image";
 import authBG from "@/public/images/authBG.png";
+import logoIMG from "@/public/images/logo.png"
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { BeatLoader } from "react-spinners";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
   const dispatch = useDispatch()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
     try {
       const { data } = await api.post('/auth/login', { email, password })
       console.log('Login API Response:', data)
@@ -30,6 +36,7 @@ export default function LoginPage() {
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         'Login failed'
       setError(errorMessage)
+      setLoading(false)
     }
   }
 
@@ -47,9 +54,16 @@ export default function LoginPage() {
         />
       </div>
 
-      <div className='w-[95%] sm:w-[70%] md:w-[40%] h-auto py-14 bg-violet-400/20 bg-opacity-30 rounded-lg backdrop-blur-md flex flex-col items-center shadow-lg'>
-        <div className='text-white text-2xl font-bold flex justify-center items-center gap-2 mt-3'>
-            <h2>Recruit Pipeline</h2>
+      <div className='w-[95%] sm:w-[70%] md:w-[40%] h-auto py-14 bg-black/15 bg-opacity-30 rounded-lg backdrop-blur-md flex flex-col items-center shadow-lg'>
+        <div className='flex justify-center items-center gap-2 mt-3'>
+            <Image
+              src={logoIMG}
+              alt="Recruit Pipeline Logo"
+              width={200}
+              height={50}
+              quality={100}
+              priority
+            />
         </div>
         
         <h2 className="text-white text-lg font-semibold mt-2">Sign In</h2>
@@ -73,17 +87,26 @@ export default function LoginPage() {
 
             <div className='flex flex-col'>
                 <label className='text-gray-900 font-semibold text-sm mb-1' htmlFor='password'>Password:</label>
-                <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    className="w-full p-2 rounded-lg bg-white bg-opacity-60 outline-none focus:ring-2 focus:ring-violet-500"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className='relative w-full'>
+                  <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      required
+                      className="w-full p-2 rounded-lg bg-white bg-opacity-60 outline-none focus:ring-2 focus:ring-violet-500 pr-10"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <div className='absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2'>
+                      {showPassword ? (
+                          <AiOutlineEyeInvisible className='cursor-pointer text-gray-600' onClick={() => setShowPassword(false)} />
+                      ) : (
+                          <AiOutlineEye className='cursor-pointer text-gray-600' onClick={() => setShowPassword(true)} />
+                      )}
+                  </div>
+                </div>
             </div>
 
           {error && (
@@ -94,9 +117,15 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full p-2 bg-violet-700 text-white rounded-lg hover:bg-violet-800 transition-colors font-semibold mt-4"
+            disabled={loading}
+            className={`w-full p-2 bg-violet-700 text-white rounded-lg hover:bg-violet-800 transition-colors font-semibold mt-4 flex justify-center items-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            Sign In
+            {loading ? (
+                <>
+                    <BeatLoader color="#ffffff" size={8} />
+                    <span>Signing In...</span>
+                </>
+            ) : "Sign In"}
           </button>
         </form>
         

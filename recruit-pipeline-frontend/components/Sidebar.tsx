@@ -4,14 +4,38 @@ import React, { useState } from 'react'
 import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai"
 import { LuLayoutDashboard } from "react-icons/lu"
 import { MdLogout, MdWavingHand } from "react-icons/md"
-import { FaEye } from "react-icons/fa6"
-import { TbHexagon3D } from 'react-icons/tb'
-import { PiFoldersFill } from 'react-icons/pi'
+import { FaBriefcase, FaUsers, FaUserTie, FaUserCheck, FaUserGroup } from "react-icons/fa6"
 import { useDispatch, useSelector } from 'react-redux'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { logout } from '@/lib/features/auth/authSlice'
 import { RootState } from '@/lib/store'
+
+// Define Link Item Interface
+interface SidebarItem {
+    name: string
+    icon: React.ReactNode
+    tab: string
+}
+
+// Define Role-Based Menus
+const roleMenus: Record<string, SidebarItem[]> = {
+    Recruiter: [
+        { name: "Dashboard", icon: <LuLayoutDashboard />, tab: "dashboard" },
+        { name: "Jobs", icon: <FaBriefcase />, tab: "jobs" },
+        { name: "Candidates", icon: <FaUsers />, tab: "candidates" },
+        { name: "HRs", icon: <FaUserTie />, tab: "hrs" },
+    ],
+    HR: [
+        { name: "Dashboard", icon: <LuLayoutDashboard />, tab: "dashboard" },
+        { name: "Jobs", icon: <FaBriefcase />, tab: "jobs" },
+        { name: "Assign Candidate", icon: <FaUserCheck />, tab: "assign-candidate" },
+        { name: "All Candidates", icon: <FaUserGroup />, tab: "all-candidates" },
+    ],
+    Candidate: [
+        { name: "Dashboard", icon: <LuLayoutDashboard />, tab: "dashboard" },
+    ]
+}
 
 function Sidebar() {
     const { user } = useSelector((state: RootState) => state.auth)
@@ -28,6 +52,9 @@ function Sidebar() {
         router.push('/auth/login')
     }
 
+    // Get menu items based on user role, default to empty if not found
+    const menuItems = user?.role ? roleMenus[user.role] || [] : []
+
     return (
         <>
             {/* Sidebar for Desktop */}
@@ -40,59 +67,28 @@ function Sidebar() {
                             <MdWavingHand />
                             <p>Hello, </p>
                             <p className='text-gray-300 font-semibold'>{user.fullName}</p>
+                            <p className='text-xs text-violet-400'>({user.role})</p>
                         </div>
                     )}
                     
                     <ul className="space-y-2 mt-8">
-                        <li>
-                            <Link
-                                href={`/?tab=dashboard`}
-                                className={
-                                    `flex items-center gap-2 px-3 py-2 rounded-md ${activeTab === "dashboard" ? "bg-gray-700 text-yellow-400 font-bold" : "hover:bg-gray-700"
-                                    }`
-                                }
-                            >
-                                <LuLayoutDashboard />
-                                <span>Dashboard</span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href={`/?tab=folders`}
-                                className={
-                                    `flex items-center gap-2 px-3 py-2 rounded-md ${activeTab === "folders" ? "bg-gray-700 text-yellow-400 font-bold" : "hover:bg-gray-700"
-                                    }`
-                                }
-                            >
-                                <PiFoldersFill />
-                                <span>Folders</span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href={`/?tab=allModels`}
-                                className={
-                                    `flex items-center gap-2 px-3 py-2 rounded-md ${activeTab === "allModels" ? "bg-gray-700 text-yellow-400 font-bold" : "hover:bg-gray-700"
-                                    }`
-                                }
-                            >
-                                <TbHexagon3D />
-                                <span>All Models</span>
-                            </Link>
-                        </li>
+                        {menuItems.map((item) => (
+                             <li key={item.tab}>
+                                <Link
+                                    href={`/?tab=${item.tab}`}
+                                    className={
+                                        `flex items-center gap-2 px-3 py-2 rounded-md ${activeTab === item.tab ? "bg-gray-700 text-yellow-400 font-bold" : "hover:bg-gray-700"
+                                        }`
+                                    }
+                                >
+                                    {item.icon}
+                                    <span>{item.name}</span>
+                                </Link>
+                            </li>
+                        ))}
                     </ul>
                     
-                    {/* Viewing Folder */}
-                    {activeTab !== 'dashboard' && activeTab !== 'allModels' && activeTab !== 'folders' &&
-                        (<div className={`flex items-center gap-2 mt-5`}>
-                            <div className='flex items-center gap-1 text-yellow-400'>
-                                <FaEye />
-                                <span className='text-xs text-yellow-400'>Viewing: </span>
-                            </div>
 
-                            <span className='text-zinc-400 text-base font-semibold'>{activeTab}</span>
-                        </div>)
-                    }
                 </div>
 
                 <div className='flex flex-col items-center'>
@@ -125,10 +121,7 @@ function Sidebar() {
 
             {/* Mobile Sidebar (Slide-in) */}
             <div className={`md:hidden fixed top-0 left-0 w-3/4 h-screen bg-gray-800 text-white p-5 shadow-lg transform ${isOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300 z-50`}>
-                <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-white text-2xl focus:outline-none">
-                    <AiOutlineClose />
-                </button>
-
+                
                 {/* User Info */}
                 <div className="pt-14">
                     {user && (
@@ -136,64 +129,29 @@ function Sidebar() {
                             <MdWavingHand />
                             <p>Hello, </p>
                             <p className='text-gray-300 font-semibold'>{user.fullName}</p>
+                            <p className='text-xs text-violet-400'>({user.role})</p>
                         </div>
                     )}
                 </div>
 
                 {/* Navigation Links */}
                 <ul className="space-y-2 mt-8">
-                     <li>
-                            <Link
-                                href={`/?tab=dashboard`}
-                                onClick={() => setIsOpen(false)}
-                                className={
-                                    `flex items-center gap-2 px-3 py-2 rounded-md ${activeTab === "dashboard" ? "bg-gray-700 text-yellow-400 font-bold" : "hover:bg-gray-700"
-                                    }`
-                                }
-                            >
-                                <LuLayoutDashboard />
-                                <span>Dashboard</span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href={`/?tab=folders`}
-                                onClick={() => setIsOpen(false)}
-                                className={
-                                    `flex items-center gap-2 px-3 py-2 rounded-md ${activeTab === "folders" ? "bg-gray-700 text-yellow-400 font-bold" : "hover:bg-gray-700"
-                                    }`
-                                }
-                            >
-                                <PiFoldersFill />
-                                <span>Folders</span>
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href={`/?tab=allModels`}
-                                onClick={() => setIsOpen(false)}
-                                className={
-                                    `flex items-center gap-2 px-3 py-2 rounded-md ${activeTab === "allModels" ? "bg-gray-700 text-yellow-400 font-bold" : "hover:bg-gray-700"
-                                    }`
-                                }
-                            >
-                                <TbHexagon3D />
-                                <span>All Models</span>
-                            </Link>
-                        </li>
+                     {menuItems.map((item) => (
+                             <li key={item.tab}>
+                                <Link
+                                    href={`/?tab=${item.tab}`}
+                                    onClick={() => setIsOpen(false)}
+                                    className={
+                                        `flex items-center gap-2 px-3 py-2 rounded-md ${activeTab === item.tab ? "bg-gray-700 text-yellow-400 font-bold" : "hover:bg-gray-700"
+                                        }`
+                                    }
+                                >
+                                    {item.icon}
+                                    <span>{item.name}</span>
+                                </Link>
+                            </li>
+                        ))}
                 </ul>
-
-                {/* Viewing Folder */}
-                 {activeTab !== 'dashboard' && activeTab !== 'allModels' && activeTab !== 'folders' &&
-                        (<div className={`flex items-center gap-2 mt-5`}>
-                            <div className='flex items-center gap-1 text-yellow-400'>
-                                <FaEye />
-                                <span className='text-xs text-yellow-400'>Viewing: </span>
-                            </div>
-
-                            <span className='text-zinc-400 text-base font-semibold'>{activeTab}</span>
-                        </div>)
-                    }
 
                 {/* Log Out Button */}
                 <div className="mt-10">
