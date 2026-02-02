@@ -10,7 +10,7 @@ connectDB();
 const app = express();
 
 const allowedOrigins = [
-  "https://hyper3-d.vercel.app",
+  "https://recruit-pipeline.vercel.app",
   "http://localhost:3000"
 ];
 
