@@ -1,8 +1,7 @@
 const Candidate = require('../models/candidate.model');
 const User = require('../models/user.model');
 const UserData = require('../models/userData.model');
-const cloudinary = require('../config/cloudinary');
-const fs = require('fs-extra');
+const { uploadFromBuffer } = require('../utils/cloudinaryHelper');
 const bcrypt = require('bcryptjs');
 
 // @desc    Add a new candidate (with resume upload)
@@ -13,7 +12,6 @@ const addCandidate = async (req, res, next) => {
     const { fullName, email, phone, skills, yearsOfExperience, jobRole, stage } = req.body;
 
     if (req.user.role !== 'HR') {
-        if (req.file) await fs.unlink(req.file.path);
         res.status(403);
         throw new Error('Not authorized. Only HR can add candidates.');
     }
@@ -21,7 +19,6 @@ const addCandidate = async (req, res, next) => {
     // Check if candidate already exists in the Candidate collection
     const candidateExists = await Candidate.findOne({ email });
     if (candidateExists) {
-        if (req.file) await fs.unlink(req.file.path);
         res.status(400);
         throw new Error('Candidate with this email already exists.');
     }
@@ -29,7 +26,6 @@ const addCandidate = async (req, res, next) => {
     // Check if user already exists in User collection
     const userExists = await User.findOne({ email });
     if (userExists) {
-        if (req.file) await fs.unlink(req.file.path);
         res.status(400);
         throw new Error('User with this email already exists.');
     }
@@ -38,16 +34,15 @@ const addCandidate = async (req, res, next) => {
     let resumePublicId = '';
     if (req.file) {
         try {
-            const result = await cloudinary.uploader.upload(req.file.path, {
+            // Upload buffer directly to Cloudinary
+            const result = await uploadFromBuffer(req.file.buffer, {
                 folder: 'resumes',
                 resource_type: 'auto',
                 access_mode: 'public'
             });
             resumeUrl = result.secure_url;
-            resumePublicId = result.public_id; // Capture public_id
-            await fs.unlink(req.file.path); // Clean temp file
+            resumePublicId = result.public_id;
         } catch (error) {
-            if (req.file) await fs.unlink(req.file.path);
             throw new Error('Resume upload failed: ' + error.message);
         }
     }
@@ -65,7 +60,7 @@ const addCandidate = async (req, res, next) => {
       jobRole,
       stage: stage || 'Applied',
       resume: resumeUrl,
-      resumePublicId: resumePublicId || '', // Store public_id
+      resumePublicId: resumePublicId || '',
       addedBy: req.user.id
     });
 
@@ -90,7 +85,7 @@ const addCandidate = async (req, res, next) => {
         email,
         phone,
         resume: resumeUrl,
-        resumePublicId: resumePublicId || '', // Store public_id in UserData too
+        resumePublicId: resumePublicId || '',
         skills: skillsArray,
         experience: yearsOfExperience,
         jobRole,
@@ -98,7 +93,7 @@ const addCandidate = async (req, res, next) => {
     });
 
     res.status(201).json({
-      message: 'Candidate added and User created successfully',
+      message: 'Candidate added and User created successfully (No local file storage used)',
       candidate,
       user: {
           _id: user._id,
@@ -180,10 +175,10 @@ const deleteCandidate = async (req, res, next) => {
     // 1. Delete resume from Cloudinary if it exists
     if (candidate.resumePublicId) {
       try {
+        const cloudinary = require('../config/cloudinary');
         await cloudinary.uploader.destroy(candidate.resumePublicId);
       } catch (error) {
         console.error('Failed to delete resume from Cloudinary:', error.message);
-        // Continue with DB deletion even if Cloudinary fails
       }
     }
 
@@ -193,7 +188,6 @@ const deleteCandidate = async (req, res, next) => {
         await UserData.findOneAndDelete({ userId: user._id });
         await User.findByIdAndDelete(user._id);
     } else {
-        // Fallback: delete UserData by email if User is missing for some reason
         await UserData.findOneAndDelete({ email: candidate.email });
     }
 
