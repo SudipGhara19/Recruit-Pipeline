@@ -161,7 +161,7 @@ export default function AssignCandidate() {
                             )}
                         </h2>
                         <div>
-                            <label className={labelClasses}>Resume (PDF, DOC, DOCX)</label>
+                            <label className={labelClasses}>Resume (PDF)</label>
                             <div className="mt-2 text-center">
                                 <label className="flex flex-col items-center justify-center w-full h-40 bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl hover:bg-pink-50 hover:border-pink-300 transition-all cursor-pointer group">
                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -169,9 +169,9 @@ export default function AssignCandidate() {
                                         <p className="mb-2 text-sm text-gray-500 font-bold px-4">
                                             {fileName ? <span className="text-pink-600 font-black">{fileName}</span> : 'Click to upload resume'}
                                         </p>
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">PDF or Word docs only</p>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-black">PDF only</p>
                                     </div>
-                                    <input type="file" className="hidden" accept=".pdf,.doc,.docx" onChange={handleFileChange} />
+                                    <input type="file" className="hidden" accept=".pdf" onChange={handleFileChange} />
                                 </label>
                                 {resume && !loadingAI && (
                                     <p className="mt-2 text-[10px] text-pink-500 font-black uppercase tracking-widest">
