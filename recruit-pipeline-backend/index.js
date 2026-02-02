@@ -9,14 +9,28 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  "https://hyper3-d.vercel.app",
+  "http://localhost:3000"
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// Global Request Logger
-app.use((req, res, next) => {
-  console.log(`📨 REQUEST RECEIVED: ${req.method} ${req.url}`);
-  next();
-});
+
 
 // Routes
 app.use('/api/auth', require('./src/routes/auth.routes'));

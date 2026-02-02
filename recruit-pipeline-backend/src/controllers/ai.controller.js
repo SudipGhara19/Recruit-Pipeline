@@ -3,34 +3,21 @@ const mammoth = require("mammoth");
 const fs = require("fs-extra");
 const Groq = require("groq-sdk");
 
-// Log API key presence (not the actual key for security)
-console.log("GROQ_API_KEY loaded:", process.env.GROQ_API_KEY ? `Yes (length: ${process.env.GROQ_API_KEY.length})` : "No");
-
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
 });
 
 const parseResume = async (req, res, next) => {
-  console.log("=== Starting Resume Parse ===");
   try {
     if (!req.file) {
-      console.log("ERROR: No file uploaded");
       res.status(400);
       throw new Error("No file uploaded");
     }
-
-    console.log("File received:", {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      hasBuffer: !!req.file.buffer
-    });
 
     let text = "";
 
     try {
       if (req.file.mimetype === "application/pdf") {
-        console.log("Processing PDF file...");
         // Handle both memory buffer and file path
         const dataBuffer = req.file.buffer || await fs.readFile(req.file.path);
         const data = await pdf(dataBuffer);
@@ -56,11 +43,8 @@ const parseResume = async (req, res, next) => {
         throw new Error("File format not supported. Please upload PDF or DOCX.");
       }
     } catch (parseError) {
-      console.error("PDF/DOCX parsing error:", parseError.message);
       throw new Error("Error extracting text from document: " + parseError.message);
     }
-
-    console.log("Text extracted successfully, length:", text.length);
 
     if (!text || text.trim().length < 50) {
       res.status(400);
@@ -76,7 +60,6 @@ const parseResume = async (req, res, next) => {
     };
 
     // Try AI-based parsing first
-    console.log("Starting Groq AI parsing...");
     try {
       const prompt = `Extract the following information from this resume text and return ONLY valid JSON:
 {
@@ -92,7 +75,6 @@ ${text.substring(0, 3000)}
 
 Return only the JSON object, no additional text.`;
 
-      console.log("Calling Groq API with llama-3.3-70b-versatile model...");
       const chatCompletion = await groq.chat.completions.create({
         messages: [
           {
@@ -104,17 +86,13 @@ Return only the JSON object, no additional text.`;
         temperature: 0.1,
         max_tokens: 500,
       });
-      console.log("Groq API response received successfully");
 
       const response = chatCompletion.choices[0]?.message?.content || "";
       
       // Try to extract JSON from response
-      console.log("Raw API Response:", response.substring(0, 100) + "...");
       let jsonMatch = response.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        console.log("JSON match found, parsing...");
         const aiParsed = JSON.parse(jsonMatch[0]);
-        console.log("JSON parsed successfully");
         parsedData = {
           fullName: aiParsed.fullName || "",
           email: aiParsed.email || "",
@@ -122,9 +100,6 @@ Return only the JSON object, no additional text.`;
           skills: aiParsed.skills || "",
           yearsOfExperience: aiParsed.yearsOfExperience || ""
         };
-        console.log("Parsed Data populated");
-      } else {
-        console.warn("No JSON match found in response");
       }
     } catch (aiError) {
       console.warn("AI parsing failed, falling back to regex:", aiError.message);
@@ -167,17 +142,12 @@ Return only the JSON object, no additional text.`;
       }
     }
 
-    console.log("Sending success response...");
     res.status(200).json({
       message: "Resume parsed successfully",
       data: parsedData
     });
-    console.log("Response sent!");
 
   } catch (error) {
-    console.error("=== RESUME PARSE ERROR ===");
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
     next(error);
   }
 };
